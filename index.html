@@ -3,33 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercadona Smart v43</title>
+    <title>Mercadona Smart v44</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 p-4 font-sans">
+<body class="bg-slate-50 p-4 font-sans text-gray-900">
     <div id="app" class="max-w-md mx-auto"></div>
+
     <script type="module">
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+        import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "https://esm.run/@google/generative-ai";
         
-        // Clave integrada: AIzaSyC-XkdO69drkY536m2ATzm_GID3EiZ9oH8
+        // Clave configurada: AIzaSyC-XkdO69drkY536m2ATzm_GID3EiZ9oH8
         const genAI = new GoogleGenerativeAI("AIzaSyC-XkdO69drkY536m2ATzm_GID3EiZ9oH8");
         
-        let chatLogs = [{role: 'ai', text: 'v43 lista con tu clave. ¡Mañana lunes empezamos la Semana 6!'}];
+        let chatLogs = [{role: 'ai', text: 'v44: Sin restricciones de contenido. ¡Mañana lunes a tope con la Semana 6!'}];
         let cargando = false;
 
         window.preguntarIA = async () => {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
             if(!msg || cargando) return;
+
             chatLogs.push({role: 'user', text: msg});
             input.value = ""; cargando = true; dibujar();
+
             try {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                // Configuramos el modelo para que NO tenga restricciones de seguridad (filtros)
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-1.5-flash",
+                    safetySettings: [
+                        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                    ],
+                });
+
                 const result = await model.generateContent(msg);
-                chatLogs.push({role: 'ai', text: result.response.text()});
+                const response = await result.response;
+                chatLogs.push({role: 'ai', text: response.text()});
             } catch (e) {
                 console.error(e);
-                chatLogs.push({role: 'ai', text: "⚠️ Error: Revisa que la clave no tenga restricciones en Google Cloud."});
+                chatLogs.push({role: 'ai', text: "⚠️ Si ves esto, confirma en AI Studio que tu clave no tiene 'IP Restrictions' activas. Google bloquea GitHub por defecto."});
             }
             cargando = false; dibujar();
         };
@@ -37,12 +51,19 @@
         window.dibujar = () => {
             document.getElementById('app').innerHTML = `
                 <div class="flex flex-col h-[90vh]">
-                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter border-b-4 border-green-900">Mercadona v43</div>
-                    <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border text-[11px] font-bold">
-                        ${chatLogs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} p-3 rounded-2xl max-w-[85%] shadow-sm">${m.text}</div></div>`).join('')}
+                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter border-b-4 border-green-900">Mercadona v44</div>
+                    <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border border-gray-100 text-[11px] font-bold">
+                        ${chatLogs.map(m => `
+                            <div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}">
+                                <div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} p-3 rounded-2xl max-w-[85%] shadow-sm leading-tight">
+                                    ${m.text}
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${cargando ? '<div class="text-[9px] font-black text-indigo-500 animate-pulse px-2 uppercase italic">Conectando con Gemini...</div>' : ''}
                     </div>
-                    <div class="flex gap-2 bg-white p-2 rounded-3xl border-2 border-gray-100 shadow-xl">
-                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Escribe 'Hola'...">
+                    <div class="flex gap-2 bg-white p-2 rounded-3xl border-2 border-gray-100 shadow-xl items-center">
+                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold bg-transparent" placeholder="Escribe 'Hola'...">
                         <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-md active:scale-95 transition-all">OK</button>
                     </div>
                 </div>`;
