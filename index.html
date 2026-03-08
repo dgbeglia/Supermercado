@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercadona v48 - Seguro</title>
+    <title>Mercadona Smart v49</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 p-4 font-sans text-gray-900">
@@ -12,17 +12,16 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
         
-        // 1. Cargamos la clave desde la memoria del móvil
-        let miClave = localStorage.getItem("LLAVE_MERCADONA");
+        // 1. Intentar cargar la clave nueva
+        let miClave = localStorage.getItem("CLAVE_MAESTRA");
 
-        // 2. Si no hay clave, la pedimos una vez
         if (!miClave) {
-            miClave = prompt("🔑 PEGA TU API KEY AQUÍ:\n(Solo se guardará en tu móvil, no en GitHub)");
-            if (miClave) localStorage.setItem("LLAVE_MERCADONA", miClave);
+            miClave = prompt("🔑 PEGA TU NUEVA CLAVE AQUÍ:");
+            if (miClave) localStorage.setItem("CLAVE_MAESTRA", miClave);
         }
 
         const genAI = miClave ? new GoogleGenerativeAI(miClave) : null;
-        let logs = [{role: 'ai', text: miClave ? 'v48: Clave cargada. ¡Escribe "Hola"!' : '⚠️ Falta la clave.'}];
+        let logs = [{role: 'ai', text: miClave ? 'v49 lista. Si falla, pulsa el botón rojo de abajo.' : '⚠️ No hay clave.'}];
         let ocupado = false;
 
         window.preguntarIA = async () => {
@@ -34,28 +33,29 @@
             input.value = ""; ocupado = true; dibujar();
 
             try {
-                // Usamos la versión "latest" que es la más flexible con las restricciones
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+                // Forzamos el uso del modelo más reciente disponible
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 const result = await model.generateContent(texto);
-                logs.push({role: 'ai', text: result.response.text()});
+                const response = await result.response;
+                logs.push({role: 'ai', text: response.text()});
             } catch (e) {
-                logs.push({role: 'ai', text: "❌ Google bloqueó la clave por seguridad. Prueba a crear una NUEVA en AI Studio y pégala aquí usando el botón de abajo."});
+                logs.push({role: 'ai', text: "❌ Error: " + e.message.substring(0, 40) + "... Pulsa REINICIAR abajo."});
             }
             ocupado = false; dibujar();
         };
 
         window.dibujar = () => {
             document.getElementById('app').innerHTML = `
-                <div class="flex flex-col h-[92vh]">
-                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter">Mercadona v48</div>
+                <div class="flex flex-col h-[90vh]">
+                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter border-b-4 border-green-900">Mercadona v49</div>
                     <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border text-[11px] font-bold">
-                        ${logs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} p-3 rounded-2xl max-w-[85%]">${m.text}</div></div>`).join('')}
+                        ${logs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} p-3 rounded-2xl max-w-[85%] shadow-sm">${m.text}</div></div>`).join('')}
                     </div>
-                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl items-center">
-                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="¿Hablamos?">
-                        <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black">OK</button>
+                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl">
+                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Escribe...">
+                        <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-md">OK</button>
                     </div>
-                    <button onclick="localStorage.clear(); location.reload();" class="text-[9px] text-red-400 mt-2 underline italic text-center">🔄 Cambiar / Reiniciar Clave</button>
+                    <button onclick="localStorage.clear(); location.reload();" class="bg-red-50 text-red-500 text-[10px] py-2 mt-4 rounded-xl border border-red-100 font-bold uppercase tracking-widest italic">⚠️ Reiniciar Todo y Nueva Clave</button>
                 </div>`;
         };
         window.onload = dibujar;
