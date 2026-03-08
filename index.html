@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercadona Smart v46</title>
+    <title>Mercadona v48 - Seguro</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 p-4 font-sans text-gray-900">
@@ -12,53 +12,50 @@
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
         
-        // 1. Intentamos recuperar la clave guardada
-        let apiKey = localStorage.getItem("GEMINI_MASTER_KEY");
+        // 1. Cargamos la clave desde la memoria del móvil
+        let miClave = localStorage.getItem("LLAVE_MERCADONA");
 
-        // 2. Si no existe, la pedimos una sola vez
-        if (!apiKey) {
-            const userKey = prompt("Introduce tu API Key de Google (solo se guardará en este móvil):");
-            if (userKey) {
-                apiKey = userKey.trim(); // Limpiamos espacios
-                localStorage.setItem("GEMINI_MASTER_KEY", apiKey);
-            }
+        // 2. Si no hay clave, la pedimos una vez
+        if (!miClave) {
+            miClave = prompt("🔑 PEGA TU API KEY AQUÍ:\n(Solo se guardará en tu móvil, no en GitHub)");
+            if (miClave) localStorage.setItem("LLAVE_MERCADONA", miClave);
         }
 
-        const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
-        let chatLogs = [{role: 'ai', text: genAI ? 'v46 Segura activa. ¡Escribe "Hola" para probar!' : '⚠️ Necesitas una clave para continuar.'}];
-        let cargando = false;
+        const genAI = miClave ? new GoogleGenerativeAI(miClave) : null;
+        let logs = [{role: 'ai', text: miClave ? 'v48: Clave cargada. ¡Escribe "Hola"!' : '⚠️ Falta la clave.'}];
+        let ocupado = false;
 
         window.preguntarIA = async () => {
             const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if(!msg || cargando || !genAI) return;
+            const texto = input.value.trim();
+            if(!texto || ocupado || !genAI) return;
 
-            chatLogs.push({role: 'user', text: msg});
-            input.value = ""; cargando = true; dibujar();
+            logs.push({role: 'user', text: texto});
+            input.value = ""; ocupado = true; dibujar();
 
             try {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const result = await model.generateContent(msg);
-                chatLogs.push({role: 'ai', text: result.response.text()});
+                // Usamos la versión "latest" que es la más flexible con las restricciones
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+                const result = await model.generateContent(texto);
+                logs.push({role: 'ai', text: result.response.text()});
             } catch (e) {
-                chatLogs.push({role: 'ai', text: "⚠️ Error: Clave inválida o bloqueada por Google Cloud. Pulsa 'Reiniciar Clave' abajo para reintentar."});
+                logs.push({role: 'ai', text: "❌ Google bloqueó la clave por seguridad. Prueba a crear una NUEVA en AI Studio y pégala aquí usando el botón de abajo."});
             }
-            cargando = false; dibujar();
+            ocupado = false; dibujar();
         };
 
         window.dibujar = () => {
             document.getElementById('app').innerHTML = `
-                <div class="flex flex-col h-[90vh]">
-                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter">Mercadona v46</div>
+                <div class="flex flex-col h-[92vh]">
+                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter">Mercadona v48</div>
                     <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border text-[11px] font-bold">
-                        ${chatLogs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} p-3 rounded-2xl max-w-[85%] shadow-sm">${m.text}</div></div>`).join('')}
-                        ${cargando ? '<div class="text-[9px] font-black text-indigo-500 animate-pulse px-2 uppercase">Conectando...</div>' : ''}
+                        ${logs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-800'} p-3 rounded-2xl max-w-[85%]">${m.text}</div></div>`).join('')}
                     </div>
-                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl">
-                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Escribe aquí...">
+                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl items-center">
+                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="¿Hablamos?">
                         <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black">OK</button>
                     </div>
-                    <button onclick="localStorage.removeItem('GEMINI_MASTER_KEY'); location.reload();" class="text-[10px] text-gray-400 mt-4 underline text-center italic">Reiniciar Clave API</button>
+                    <button onclick="localStorage.clear(); location.reload();" class="text-[9px] text-red-400 mt-2 underline italic text-center">🔄 Cambiar / Reiniciar Clave</button>
                 </div>`;
         };
         window.onload = dibujar;
