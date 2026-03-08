@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercadona Smart v26</title>
+    <meta name="theme-color" content="#15803d">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-50 p-4 min-h-screen font-sans text-gray-800">
+    <div id="app" class="max-w-md mx-auto pb-10"></div>
+
+    <script type="module">
+        // Importación optimizada para navegadores móviles
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCfifQBtUNLbUkD8r_aRZBfv7fOStpVkjo",
+            authDomain: "supermercado-3e981.firebaseapp.com",
+            databaseURL: "https://supermercado-3e981-default-rtdb.firebaseio.com",
+            projectId: "supermercado-3e981",
+            storageBucket: "supermercado-3e981.firebasestorage.app",
+            messagingSenderId: "1012881433414",
+            appId: "1:1012881433414:web:db2c2e235efe4862a1bb47"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Tu API KEY
+        const GEN_AI_KEY = "AIzaSyC-XkdO69drkY536m2ATzm_GID3EiZ9oH8";
+        const genAI = new GoogleGenerativeAI(GEN_AI_KEY);
+
+        const PIN_CORRECTO = "20102017";
+        let autorizado = localStorage.getItem('app_autorizada') === 'true';
+        let vista = 'HOME';
+        let chatLogs = [{role: 'ai', text: '¡Hola! Versión v26 lista en Netlify. ¿Qué necesitas?'}];
+        let cargandoIA = false;
+        let localData = {};
+        let historialData = {};
+
+        if (autorizado) {
+            db.ref('mercadona').on('value', s => { localData = s.val() || {}; dibujar(); });
+            db.ref('historial').on('value', s => { historialData = s.val() || {}; dibujar(); });
+        }
+
+        window.verificarPIN = () => {
+            if (document.getElementById('pin-input').value === PIN_CORRECTO) {
+                localStorage.setItem('app_autorizada', 'true');
+                location.reload();
+            } else alert("PIN Incorrecto");
+        };
+
+        window.irA = (v) => { vista = v; dibujar(); };
+
+        window.preguntarIA = async () => {
+            const input = document.getElementById('chat-input');
+            const texto = input.value.trim();
+            if(!texto || cargandoIA) return;
+
+            chatLogs.push({role: 'user', text: texto});
+            input.value = "";
+            cargandoIA = true;
+            dibujar();
+
+            try {
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const prompt = `Usuario: ${texto}. Datos context: ${JSON.stringify(historialData).substring(0,500)}`;
+                
+                const result = await model.generateContent(prompt);
+                chatLogs.push({role: 'ai', text: result.response.text()});
+            } catch (err) {
+                console.error(err);
+                chatLogs.push({role: 'ai', text: "❌ Error de conexión. Detalles: " + (err.message || "Desconocido")});
+            }
+            cargandoIA = false;
+            dibujar();
+        };
+
+        window.dibujar = function() {
+            const root = document.getElementById('app');
+            if (!autorizado) {
+                root.innerHTML = `<div class="flex flex-col items-center pt-20"><input type="password" id="pin-input" class="w-64 text-center text-3xl p-4 border rounded-2xl mb-4 outline-none" placeholder="PIN"><button onclick="verificarPIN()" class="w-64 bg-green-600 text-white p-4 rounded-2xl font-black">ENTRAR</button></div>`;
+                return;
+            }
+
+            if (vista === 'HOME') {
+                root.innerHTML = `
+                    <h1 class="text-3xl font-black text-center text-green-700 my-6 italic uppercase">Mercadona</h1>
+                    <button onclick="irA('IA')" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-3xl font-bold mb-6 shadow-xl flex justify-between items-center italic"><span>✨ PREGUNTAR A GEMINI</span></button>
+                    <div class="space-y-2 text-center text-gray-300 text-[10px] font-bold uppercase tracking-widest">
+                        <p>Estado: Online</p>
+                        <p>Servidor: Netlify</p>
+                    </div>`;
+            } else if (vista === 'IA') {
+                root.innerHTML = `
+                    <div class="flex flex-col h-[88vh]">
+                        <button onclick="irA('HOME')" class="bg-white w-10 h-10 rounded-xl border mb-2 font-black shadow-sm">&lt;</button>
+                        <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 border mb-4">
+                            ${chatLogs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'} p-3 rounded-2xl max-w-[85%] text-[11px] font-bold leading-relaxed">${m.text}</div></div>`).join('')}
+                            ${cargandoIA ? '<div class="text-[9px] font-black text-indigo-400 animate-pulse px-2">GEMINI ESTÁ PENSANDO...</div>' : ''}
+                        </div>
+                        <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-lg">
+                            <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Escribe aquí...">
+                            <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-md">OK</button>
+                        </div>
+                    </div>`;
+            }
+        };
+        dibujar();
+    </script>
+</body>
+</html>
