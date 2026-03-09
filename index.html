@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test de API Key</title>
+    <title>Test de API Key v2</title>
 </head>
-<body style="font-family: sans-serif; padding: 20px; text-align: center;">
+<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #f0f2f5;">
 
-    <h2>Comprobador de API Key</h2>
+    <h2>Comprobador de API Key v2</h2>
+    <p style="font-size: 12px; color: #666;">Corrigiendo error 404 de modelos</p>
     
     <input type="text" id="key-input" placeholder="Pega tu clave aquí" 
-           style="width: 80%; padding: 10px; margin-bottom: 10px;">
+           style="width: 85%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
     <br>
-    <button id="btn-test" style="padding: 10px 20px; cursor: pointer;">Probar Clave Ahora</button>
+    <button id="btn-test" style="padding: 12px 24px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold;">Probar Ahora</button>
 
-    <div id="resultado" style="margin-top: 20px; font-weight: bold; padding: 15px; border-radius: 8px;"></div>
+    <div id="resultado" style="margin-top: 20px; font-weight: bold; padding: 20px; border-radius: 8px; font-size: 14px; line-height: 1.5;"></div>
 
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
@@ -24,29 +25,28 @@
             const resDiv = document.getElementById('resultado');
             
             if (!key) {
-                resDiv.innerText = "⚠️ Por favor, pega una clave.";
+                resDiv.innerText = "⚠️ Pega la clave primero.";
                 return;
             }
 
-            resDiv.innerText = "⌛ Probando conexión...";
-            resDiv.style.backgroundColor = "#eee";
+            resDiv.innerText = "⌛ Conectando con Google...";
+            resDiv.style.backgroundColor = "#e9ecef";
+            resDiv.style.color = "#333";
 
             try {
                 const genAI = new GoogleGenerativeAI(key);
+                // Forzamos el uso del modelo sin prefijos problemáticos
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 
-                // Pedimos una respuesta súper corta para ahorrar tiempo
-                const result = await model.generateContent("Responde solo con la palabra: OK");
-                const text = result.response.text();
+                const result = await model.generateContent("Di: 'CONEXIÓN EXITOSA'");
+                const response = await result.response;
+                const text = response.text();
 
-                if (text.includes("OK")) {
-                    resDiv.innerText = "✅ ¡FUNCIONA! La clave es correcta y Google responde.";
-                    resDiv.style.backgroundColor = "#d4edda";
-                    resDiv.style.color = "#155724";
-                }
+                resDiv.innerHTML = "✅ ¡ESTÁ VIVA!<br><br>Google responde: " + text;
+                resDiv.style.backgroundColor = "#d4edda";
+                resDiv.style.color = "#155724";
             } catch (error) {
-                console.error(error);
-                resDiv.innerText = "❌ ERROR: " + error.message;
+                resDiv.innerHTML = "❌ SIGUE FALLANDO:<br>" + error.message;
                 resDiv.style.backgroundColor = "#f8d7da";
                 resDiv.style.color = "#721c24";
             }
