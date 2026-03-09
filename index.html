@@ -3,53 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercadona Pro v57</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Test de API Key</title>
 </head>
-<body class="bg-slate-50 p-4 font-sans text-gray-900">
-    <div id="app" class="max-w-md mx-auto"></div>
+<body style="font-family: sans-serif; padding: 20px; text-align: center;">
+
+    <h2>Comprobador de API Key</h2>
+    
+    <input type="text" id="key-input" placeholder="Pega tu clave aquí" 
+           style="width: 80%; padding: 10px; margin-bottom: 10px;">
+    <br>
+    <button id="btn-test" style="padding: 10px 20px; cursor: pointer;">Probar Clave Ahora</button>
+
+    <div id="resultado" style="margin-top: 20px; font-weight: bold; padding: 15px; border-radius: 8px;"></div>
 
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-        // Importamos la clave desde el archivo externo seguro
-        import { CONFIG } from "./config.js";
-        
-        const genAI = new GoogleGenerativeAI(CONFIG.GEMINI_KEY);
-        let logs = [{role: 'ai', text: 'v57 Pro: Configuración externa cargada. ¡Listo para entrenar!'}];
-        let cargando = false;
 
-        window.preguntarIA = async () => {
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if(!msg || cargando) return;
+        document.getElementById('btn-test').onclick = async () => {
+            const key = document.getElementById('key-input').value.trim();
+            const resDiv = document.getElementById('resultado');
+            
+            if (!key) {
+                resDiv.innerText = "⚠️ Por favor, pega una clave.";
+                return;
+            }
 
-            logs.push({role: 'user', text: msg});
-            input.value = ""; cargando = true; dibujar();
+            resDiv.innerText = "⌛ Probando conexión...";
+            resDiv.style.backgroundColor = "#eee";
 
             try {
+                const genAI = new GoogleGenerativeAI(key);
                 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const result = await model.generateContent(msg);
-                logs.push({role: 'ai', text: result.response.text()});
-            } catch (e) {
-                logs.push({role: 'ai', text: "❌ Error: No se pudo conectar con el archivo config.js."});
-            }
-            cargando = false; dibujar();
-        };
+                
+                // Pedimos una respuesta súper corta para ahorrar tiempo
+                const result = await model.generateContent("Responde solo con la palabra: OK");
+                const text = result.response.text();
 
-        window.dibujar = () => {
-            document.getElementById('app').innerHTML = `
-                <div class="flex flex-col h-[92vh]">
-                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter border-b-4 border-green-900 shadow-green-200">Mercadona v57</div>
-                    <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border border-gray-100 text-[11px] font-bold">
-                        ${logs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-700 border border-gray-100'} p-3 rounded-2xl max-w-[85%]">${m.text}</div></div>`).join('')}
-                    </div>
-                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl items-center">
-                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Escribe 'Semana 6'...">
-                        <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-md">OK</button>
-                    </div>
-                </div>`;
+                if (text.includes("OK")) {
+                    resDiv.innerText = "✅ ¡FUNCIONA! La clave es correcta y Google responde.";
+                    resDiv.style.backgroundColor = "#d4edda";
+                    resDiv.style.color = "#155724";
+                }
+            } catch (error) {
+                console.error(error);
+                resDiv.innerText = "❌ ERROR: " + error.message;
+                resDiv.style.backgroundColor = "#f8d7da";
+                resDiv.style.color = "#721c24";
+            }
         };
-        window.onload = dibujar;
     </script>
 </body>
 </html>
