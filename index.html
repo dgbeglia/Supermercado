@@ -3,58 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test API Estable</title>
+    <title>Test Final API</title>
 </head>
-<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #fafafa;">
+<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #f4f4f9;">
 
-    <h2>Comprobador de API Estable</h2>
-    <p style="color: #666; font-size: 13px;">Corrigiendo el error 404 de v1beta</p>
+    <h2>Probador Directo (Sin Librerías)</h2>
+    <p style="color: #666;">Si este falla, el problema es la clave. Si este funciona, el problema era la librería.</p>
     
-    <input type="text" id="key-input" placeholder="Pega tu clave aquí" 
-           style="width: 90%; padding: 15px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 14px;">
+    <input type="text" id="key-input" placeholder="Pega tu API Key aquí" 
+           style="width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 15px;">
     <br>
-    <button id="btn-test" style="padding: 15px 30px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px;">PROBAR CLAVE ESTABLE</button>
+    <button id="btn-test" style="padding: 15px 30px; background: #000; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
+        PROBAR CONEXIÓN DIRECTA
+    </button>
 
-    <div id="resultado" style="margin-top: 25px; padding: 20px; border-radius: 12px; font-weight: bold; font-size: 15px;"></div>
+    <div id="resultado" style="margin-top: 25px; padding: 20px; border-radius: 10px; font-size: 14px; white-space: pre-wrap;"></div>
 
-    <script type="module">
-        // Importamos la versión específica para evitar el error 404
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
-
+    <script>
         document.getElementById('btn-test').onclick = async () => {
             const key = document.getElementById('key-input').value.trim();
             const resDiv = document.getElementById('resultado');
             
-            if (!key) {
-                resDiv.innerText = "⚠️ Pega la clave primero.";
-                resDiv.style.backgroundColor = "#fff3cd";
-                return;
-            }
+            if (!key) { resDiv.innerText = "⚠️ Pega la clave."; return; }
 
-            resDiv.innerText = "⌛ Conectando con Google (v1)...";
-            resDiv.style.backgroundColor = "#e8f0fe";
-            resDiv.style.color = "#1a73e8";
+            resDiv.innerText = "⌛ Intentando conexión directa con Google v1...";
+            resDiv.style.backgroundColor = "#eee";
 
             try {
-                // Forzamos el uso de la API estable
-                const genAI = new GoogleGenerativeAI(key);
-                const model = genAI.getGenerativeModel({ 
-                    model: "gemini-1.5-flash",
-                    apiVersion: "v1" // <--- Esto soluciona el error 404 de tus capturas
-                });
+                // Llamada directa a la API de Google sin intermediarios
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
                 
-                const result = await model.generateContent("Di: 'CONEXIÓN ESTABLE'");
-                const response = await result.response;
-                const text = response.text();
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Responde solo: OK" }] }]
+                    })
+                });
 
-                resDiv.innerHTML = "✅ ¡POR FIN FUNCIONA!<br><br>Google dice: " + text;
-                resDiv.style.backgroundColor = "#d4edda";
-                resDiv.style.color = "#155724";
+                const data = await response.json();
+
+                if (response.ok) {
+                    resDiv.innerHTML = "✅ ¡CONEXIÓN DIRECTA EXITOSA!<br><br>Respuesta: " + data.candidates[0].content.parts[0].text;
+                    resDiv.style.backgroundColor = "#d4edda";
+                    resDiv.style.color = "#155724";
+                } else {
+                    resDiv.innerHTML = "❌ ERROR DE GOOGLE:<br>" + JSON.stringify(data, null, 2);
+                    resDiv.style.backgroundColor = "#f8d7da";
+                    resDiv.style.color = "#721c24";
+                }
             } catch (error) {
-                console.error(error);
-                resDiv.innerHTML = "❌ ERROR PERSISTENTE:<br><br>" + error.message;
-                resDiv.style.backgroundColor = "#f8d7da";
-                resDiv.style.color = "#721c24";
+                resDiv.innerText = "❌ ERROR DE RED: " + error.message;
             }
         };
     </script>
