@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test de API Key v2</title>
+    <title>Test API Estable</title>
 </head>
-<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #f0f2f5;">
+<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #fafafa;">
 
-    <h2>Comprobador de API Key v2</h2>
-    <p style="font-size: 12px; color: #666;">Corrigiendo error 404 de modelos</p>
+    <h2>Comprobador de API Estable</h2>
+    <p style="color: #666; font-size: 13px;">Corrigiendo el error 404 de v1beta</p>
     
     <input type="text" id="key-input" placeholder="Pega tu clave aquí" 
-           style="width: 85%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
+           style="width: 90%; padding: 15px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 14px;">
     <br>
-    <button id="btn-test" style="padding: 12px 24px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold;">Probar Ahora</button>
+    <button id="btn-test" style="padding: 15px 30px; cursor: pointer; background: #1a73e8; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 16px;">PROBAR CLAVE ESTABLE</button>
 
-    <div id="resultado" style="margin-top: 20px; font-weight: bold; padding: 20px; border-radius: 8px; font-size: 14px; line-height: 1.5;"></div>
+    <div id="resultado" style="margin-top: 25px; padding: 20px; border-radius: 12px; font-weight: bold; font-size: 15px;"></div>
 
     <script type="module">
+        // Importamos la versión específica para evitar el error 404
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
         document.getElementById('btn-test').onclick = async () => {
@@ -26,27 +27,32 @@
             
             if (!key) {
                 resDiv.innerText = "⚠️ Pega la clave primero.";
+                resDiv.style.backgroundColor = "#fff3cd";
                 return;
             }
 
-            resDiv.innerText = "⌛ Conectando con Google...";
-            resDiv.style.backgroundColor = "#e9ecef";
-            resDiv.style.color = "#333";
+            resDiv.innerText = "⌛ Conectando con Google (v1)...";
+            resDiv.style.backgroundColor = "#e8f0fe";
+            resDiv.style.color = "#1a73e8";
 
             try {
+                // Forzamos el uso de la API estable
                 const genAI = new GoogleGenerativeAI(key);
-                // Forzamos el uso del modelo sin prefijos problemáticos
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-1.5-flash",
+                    apiVersion: "v1" // <--- Esto soluciona el error 404 de tus capturas
+                });
                 
-                const result = await model.generateContent("Di: 'CONEXIÓN EXITOSA'");
+                const result = await model.generateContent("Di: 'CONEXIÓN ESTABLE'");
                 const response = await result.response;
                 const text = response.text();
 
-                resDiv.innerHTML = "✅ ¡ESTÁ VIVA!<br><br>Google responde: " + text;
+                resDiv.innerHTML = "✅ ¡POR FIN FUNCIONA!<br><br>Google dice: " + text;
                 resDiv.style.backgroundColor = "#d4edda";
                 resDiv.style.color = "#155724";
             } catch (error) {
-                resDiv.innerHTML = "❌ SIGUE FALLANDO:<br>" + error.message;
+                console.error(error);
+                resDiv.innerHTML = "❌ ERROR PERSISTENTE:<br><br>" + error.message;
                 resDiv.style.backgroundColor = "#f8d7da";
                 resDiv.style.color = "#721c24";
             }
