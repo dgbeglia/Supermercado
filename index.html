@@ -1,57 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Emergencia</title>
-</head>
-<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #fff;">
-
-    <h2>Probador de Emergencia (Modelo Pro)</h2>
-    
-    <input type="text" id="key-input" placeholder="Pega tu API Key" 
-           style="width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 15px;">
-    <br>
-    <button id="btn-test" style="padding: 15px 30px; background: #c00; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
-        PROBAR MODELO PRO
-    </button>
-
-    <div id="resultado" style="margin-top: 25px; padding: 20px; border-radius: 10px; font-size: 14px; white-space: pre-wrap;"></div>
-
+<html>
+<head><title>Ultimo Test</title></head>
+<body style="text-align:center; padding:50px;">
+    <input type="text" id="k" placeholder="Pega la NUEVA clave" style="width:80%; padding:10px;">
+    <button onclick="test()">PROBAR</button>
+    <h1 id="r"></h1>
     <script>
-        document.getElementById('btn-test').onclick = async () => {
-            const key = document.getElementById('key-input').value.trim();
-            const resDiv = document.getElementById('resultado');
-            if (!key) return;
-
-            resDiv.innerText = "⌛ Probando con modelo 'gemini-pro'...";
-            resDiv.style.backgroundColor = "#eee";
-
-            try {
-                // Probamos con el modelo gemini-pro (es el más compatible del mundo)
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
-                
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Di: FUNCIONA" }] }]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    resDiv.innerHTML = "✅ ¡POR FIN! CONEXIÓN CON MODELO PRO EXITOSA.<br><br>Respuesta: " + data.candidates[0].content.parts[0].text;
-                    resDiv.style.backgroundColor = "#d4edda";
-                } else {
-                    resDiv.innerHTML = "❌ SIGUE EL 404 O ERROR:<br>" + JSON.stringify(data, null, 2);
-                    resDiv.style.backgroundColor = "#f8d7da";
-                }
-            } catch (error) {
-                resDiv.innerText = "❌ ERROR: " + error.message;
-            }
-        };
+        async function test() {
+            const key = document.getElementById('k').value;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                method: 'POST',
+                body: JSON.stringify({contents:[{parts:[{text:'Hola'}]}]})
+            });
+            const data = await res.json();
+            document.getElementById('r').innerText = res.ok ? "✅ FUNCIONA" : "❌ SIGUE EL ERROR";
+            console.log(data);
+        }
     </script>
 </body>
 </html>
