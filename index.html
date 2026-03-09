@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercadona Pro v56</title>
+    <title>Mercadona Pro v57</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 p-4 font-sans text-gray-900">
@@ -11,12 +11,11 @@
 
     <script type="module">
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+        // Importamos la clave desde el archivo externo seguro
+        import { CONFIG } from "./config.js";
         
-        // Esta es la forma profesional: Vercel inyecta la clave aquí al desplegar
-        const KEY = import.meta.env?.VITE_GEMINI_KEY || "AIzaSyC-XkdO69drkY536m2ATzm_GID3EiZ9oH8";
-
-        const genAI = new GoogleGenerativeAI(KEY);
-        let logs = [{role: 'ai', text: 'v56: Sistema profesional activado. Clave protegida.'}];
+        const genAI = new GoogleGenerativeAI(CONFIG.GEMINI_KEY);
+        let logs = [{role: 'ai', text: 'v57 Pro: Configuración externa cargada. ¡Listo para entrenar!'}];
         let cargando = false;
 
         window.preguntarIA = async () => {
@@ -32,21 +31,21 @@
                 const result = await model.generateContent(msg);
                 logs.push({role: 'ai', text: result.response.text()});
             } catch (e) {
-                logs.push({role: 'ai', text: "❌ Error: La clave en el archivo .env no es válida."});
+                logs.push({role: 'ai', text: "❌ Error: No se pudo conectar con el archivo config.js."});
             }
             cargando = false; dibujar();
         };
 
         window.dibujar = () => {
             document.getElementById('app').innerHTML = `
-                <div class="flex flex-col h-[90vh]">
-                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter border-b-4 border-green-900 shadow-green-200">Mercadona v56</div>
-                    <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border text-[11px] font-bold">
-                        ${logs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-700 border'} p-3 rounded-2xl max-w-[85%]">${m.text}</div></div>`).join('')}
+                <div class="flex flex-col h-[92vh]">
+                    <div class="bg-green-700 text-white p-4 rounded-3xl shadow-lg mb-4 text-center font-black uppercase italic tracking-tighter border-b-4 border-green-900 shadow-green-200">Mercadona v57</div>
+                    <div class="flex-1 overflow-y-auto bg-white rounded-3xl p-4 shadow-inner space-y-4 mb-4 border border-gray-100 text-[11px] font-bold">
+                        ${logs.map(m => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="${m.role === 'user' ? 'bg-indigo-600 text-white shadow-md' : 'bg-white text-gray-700 border border-gray-100'} p-3 rounded-2xl max-w-[85%]">${m.text}</div></div>`).join('')}
                     </div>
-                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl">
-                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Entrenamiento Semana 6...">
-                        <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black">OK</button>
+                    <div class="flex gap-2 bg-white p-2 rounded-3xl border shadow-xl items-center">
+                        <input type="text" id="chat-input" class="flex-1 p-3 outline-none text-xs font-bold" placeholder="Escribe 'Semana 6'...">
+                        <button onclick="preguntarIA()" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-md">OK</button>
                     </div>
                 </div>`;
         };
