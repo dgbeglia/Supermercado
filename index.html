@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Final API</title>
+    <title>Test Emergencia</title>
 </head>
-<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #f4f4f9;">
+<body style="font-family: sans-serif; padding: 20px; text-align: center; background: #fff;">
 
-    <h2>Probador Directo (Sin Librerías)</h2>
-    <p style="color: #666;">Si este falla, el problema es la clave. Si este funciona, el problema era la librería.</p>
+    <h2>Probador de Emergencia (Modelo Pro)</h2>
     
-    <input type="text" id="key-input" placeholder="Pega tu API Key aquí" 
+    <input type="text" id="key-input" placeholder="Pega tu API Key" 
            style="width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 15px;">
     <br>
-    <button id="btn-test" style="padding: 15px 30px; background: #000; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
-        PROBAR CONEXIÓN DIRECTA
+    <button id="btn-test" style="padding: 15px 30px; background: #c00; color: #fff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
+        PROBAR MODELO PRO
     </button>
 
     <div id="resultado" style="margin-top: 25px; padding: 20px; border-radius: 10px; font-size: 14px; white-space: pre-wrap;"></div>
@@ -23,37 +22,34 @@
         document.getElementById('btn-test').onclick = async () => {
             const key = document.getElementById('key-input').value.trim();
             const resDiv = document.getElementById('resultado');
-            
-            if (!key) { resDiv.innerText = "⚠️ Pega la clave."; return; }
+            if (!key) return;
 
-            resDiv.innerText = "⌛ Intentando conexión directa con Google v1...";
+            resDiv.innerText = "⌛ Probando con modelo 'gemini-pro'...";
             resDiv.style.backgroundColor = "#eee";
 
             try {
-                // Llamada directa a la API de Google sin intermediarios
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
+                // Probamos con el modelo gemini-pro (es el más compatible del mundo)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: "Responde solo: OK" }] }]
+                        contents: [{ parts: [{ text: "Di: FUNCIONA" }] }]
                     })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    resDiv.innerHTML = "✅ ¡CONEXIÓN DIRECTA EXITOSA!<br><br>Respuesta: " + data.candidates[0].content.parts[0].text;
+                    resDiv.innerHTML = "✅ ¡POR FIN! CONEXIÓN CON MODELO PRO EXITOSA.<br><br>Respuesta: " + data.candidates[0].content.parts[0].text;
                     resDiv.style.backgroundColor = "#d4edda";
-                    resDiv.style.color = "#155724";
                 } else {
-                    resDiv.innerHTML = "❌ ERROR DE GOOGLE:<br>" + JSON.stringify(data, null, 2);
+                    resDiv.innerHTML = "❌ SIGUE EL 404 O ERROR:<br>" + JSON.stringify(data, null, 2);
                     resDiv.style.backgroundColor = "#f8d7da";
-                    resDiv.style.color = "#721c24";
                 }
             } catch (error) {
-                resDiv.innerText = "❌ ERROR DE RED: " + error.message;
+                resDiv.innerText = "❌ ERROR: " + error.message;
             }
         };
     </script>
