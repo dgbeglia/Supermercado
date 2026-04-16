@@ -94,14 +94,27 @@
         window.cambiarFecha = (id, val) => { if(id==='desde') fechaDesde = val; else fechaHasta = val; dibujar(); };
 
         window.confirmarProducto = (id, e) => {
-            e.stopPropagation();
-            const i = localData[id];
-            push(ref(db, 'historial'), { 
-                name: i.name, price: parseFloat(i.price) || 0, qty: i.qty || 1, 
-                date: Date.now(), cat: i.cat || "VARIOS"
-            });
-            update(ref(db, 'mercadona/' + id), { confirmed: true });
-        };
+    e.stopPropagation();
+    const i = localData[id];
+    
+    // 1. Enviamos al historial inmediatamente (esto actualiza la barra al instante)
+    push(ref(db, 'historial'), { 
+        name: i.name, 
+        price: parseFloat(i.price) || 0, 
+        qty: i.qty || 1, 
+        date: Date.now(), 
+        cat: i.cat || "VARIOS"
+    });
+
+    // 2. Lo marcamos como confirmado y lo sacamos de la lista activa de la compra
+    // para que no haya duplicados en la interfaz
+    update(ref(db, 'mercadona/' + id), { 
+        confirmed: true,
+        bought: false // Al ponerlo en false, deja de sumar en totalCestaActual
+    });
+};
+
+  
 
         window.finalizarCompra = () => {
             if(confirm("&iquest;Finalizar y guardar en historial?")){
@@ -169,7 +182,7 @@
             else if (vista === 'RESUMEN') {
                 let totalCestaActual = 0;
                 Object.values(localData).filter(i => i.bought).forEach(i => totalCestaActual += (parseFloat(i.price) || 0) * (parseInt(i.qty) || 1));
-                const totalSemanaReal = obtenerGastoSemanalAcumulado() + totalCestaActual;
+                const totalSemanaReal = obtenerGastoSemanalAcumulado();
                 const porcentaje = Math.min((totalSemanaReal / presupuestoMax) * 100, 100);
 
                 html = `<div class="sticky top-0 bg-gray-50 py-2 z-10">
